@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from datetime import datetime
 from io import BytesIO
 from json import dump
@@ -10,6 +11,8 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import models
 from django.utils.encoding import smart_bytes
+
+from .utils import *
 
 from ... import __version__
 
@@ -49,6 +52,8 @@ class Command(BaseCommand):
         """
         Process the command.
         """
+        self.attr = AttributeRepository()
+
         tar = self._create_archive()
         self._dump_db(tar)
         self._dump_files(tar)
@@ -60,10 +65,10 @@ class Command(BaseCommand):
         """
         Create the archive and return the TarFile.
         """
-        filename = getattr(settings, 'ARCHIVE_FILENAME', '%Y-%m-%d--%H-%M-%S')
-        fmt = getattr(settings, 'ARCHIVE_FORMAT', 'bz2')
+        filename = self.attr.get('ARCHIVE_FILENAME')
+        fmt = self.attr.get('ARCHIVE_FORMAT')
         absolute_path = path.join(
-            getattr(settings, 'ARCHIVE_DIRECTORY', ''),
+            self.attr.get('ARCHIVE_DIRECTORY'),
             '%s.tar.%s' % (datetime.today().strftime(filename), fmt)
         )
         return TarFile.open(absolute_path, 'w:%s' % fmt)
@@ -73,17 +78,11 @@ class Command(BaseCommand):
         Dump the rows in each model to the archive.
         """
 
-        # Determine the list of models to exclude
-        exclude = getattr(settings, 'ARCHIVE_EXCLUDE', (
-            'auth.Permission',
-            'contenttypes.ContentType',
-            'sessions.Session',
-        ))
-
         # Dump the tables to a MixedIO
         data = MixedIO()
-        call_command('dumpdata', all=True, format='json', exclude=exclude, stdout=data)
-        info = TarInfo('data.json')
+        call_command('dumpdata', all=True, format='json', indent=self.attr.get('ARCHIVE_DB_INDENT'),
+                                 exclude=self.attr.get('ARCHIVE_EXCLUDE'), stdout=data)
+        info = TarInfo(DB_DUMP)
         info.size = data.rewind()
         tar.addfile(info, data)
 
@@ -117,7 +116,13 @@ class Command(BaseCommand):
         Dump metadata to the archive.
         """
         data = MixedIO()
-        dump({'version': __version__}, data)
-        info = TarInfo('meta.json')
+        meta_dict = OrderedDict((
+            ('version', __version__),
+            ('db_file', DB_DUMP),
+            ('media_folder', MEDIA_DIR),
+            ('settings', self.attr.settings_dict()),
+        ))
+        dump(meta_dict, data, indent=2)
+        info = TarInfo(META_DUMP)
         info.size = data.rewind()
         tar.addfile(info, data)
