@@ -22,6 +22,7 @@ class AttributeRepository(object):
             'sessions.Session',
         ),
         'ARCHIVE_DB_INDENT': None,
+        'ARCHIVE_MEDIA_POLICY': 'all_files', #possible values: 'all_files', 'filefield_targets'
     }
 
     def get(self, name):
