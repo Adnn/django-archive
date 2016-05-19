@@ -69,6 +69,11 @@ class Command(BaseCommand):
         """
         self.attr = AttributeRepository()
 
+        if not path.isdir(self.attr.get('ARCHIVE_DIRECTORY')):
+            self.stderr.write("Setting 'ARCHIVE_DIRECTORY' set to the non-existent directory '{}'."
+                              .format(self.attr.get('ARCHIVE_DIRECTORY')))
+            exit(1)
+            
         tar = self._create_archive()
         self._dump_db(tar)
         self._dump_files(tar)
@@ -84,7 +89,7 @@ class Command(BaseCommand):
         fmt = self.attr.get('ARCHIVE_FORMAT')
         absolute_path = path.join(
             self.attr.get('ARCHIVE_DIRECTORY'),
-            '%s.tar.%s' % (datetime.today().strftime(filename), fmt)
+            '%s.tar%s' % (datetime.today().strftime(filename), '.'+fmt if fmt else '')
         )
         return TarFile.open(absolute_path, 'w:%s' % fmt)
 
