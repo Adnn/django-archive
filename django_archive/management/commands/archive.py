@@ -53,7 +53,8 @@ class Command(BaseCommand):
         self._dump_db(tar)
         self._dump_files(tar)
         self._dump_meta(tar)
-        self.stdout.write("Backup completed.")
+        self.stdout.write("Backup completed to archive '{}'.".format(tar.name))
+        tar.close()
 
     def _create_archive(self):
         """
@@ -106,7 +107,6 @@ class Command(BaseCommand):
                     for field_name in field_names:
                         field = getattr(row, field_name)
                         if field:
-                            field.open()
                             info = TarInfo(field.name)
                             info.size = field.size
                             tar.addfile(info, field)
