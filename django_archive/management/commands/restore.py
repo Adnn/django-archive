@@ -64,7 +64,8 @@ class Command(BaseCommand):
         # command can only get its input data from the filesystem, so we create a temporary file in order to use it.
         db_element = self.meta_dict.get('db_file')
         with tempfile.NamedTemporaryFile(suffix=".json") as temporary_extracted:
-            shutil.copyfileobj(tar.extractfile(db_element), temporary_extracted)
+            # -1 is given as a negative value disables "looping over the source data in chunks", which was causing truncation
+            shutil.copyfileobj(tar.extractfile(db_element), temporary_extracted, -1)
             call_command('loaddata', temporary_extracted.name)
 
     def _load_files(self, tar):
