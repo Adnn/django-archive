@@ -67,6 +67,7 @@ class Command(BaseCommand):
         """
         Process the command.
         """
+        
         self.attr = AttributeRepository()
 
         if not path.isdir(self.attr.get('ARCHIVE_DIRECTORY')):
@@ -74,12 +75,12 @@ class Command(BaseCommand):
                               .format(self.attr.get('ARCHIVE_DIRECTORY')))
             exit(1)
             
-        tar = self._create_archive()
-        self._dump_db(tar)
-        self._dump_files(tar)
-        self._dump_meta(tar)
+        with self._create_archive() as tar:
+            self._dump_db(tar)
+            self._dump_files(tar)
+            self._dump_meta(tar)
         self.stdout.write("Backup completed to archive '{}'.".format(tar.name))
-        tar.close()
+
 
     def _create_archive(self):
         """
