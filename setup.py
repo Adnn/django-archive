@@ -3,12 +3,12 @@ from distutils.core import setup
 from django_archive import __version__
 
 setup(
-    name='django_archive',
+    name='django_archive_adnn',
     version=__version__,
     description='Management command for creating compressed archives of DB tables and uploaded media',
-    author='Nathan Osman',
+    author='Nathan Osman, Adnn',
     author_email='nathan@quickmediasolutions.com',
-    url='https://github.com/nathan-osman/django-archive',
+    url='https://github.com/adnn/django-archive',
     license='MIT',
     packages=[
         'django_archive',
